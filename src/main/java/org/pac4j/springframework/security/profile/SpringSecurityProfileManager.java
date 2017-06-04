@@ -1,9 +1,12 @@
 package org.pac4j.springframework.security.profile;
 
+import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.springframework.security.util.SpringSecurityHelper;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.RememberMeServices;
 
 /**
  * Specific profile manager for Spring Security.
@@ -13,6 +16,8 @@ import org.pac4j.springframework.security.util.SpringSecurityHelper;
  */
 public class SpringSecurityProfileManager extends ProfileManager<CommonProfile> {
 
+    private RememberMeServices rememberMeServices;
+
     public SpringSecurityProfileManager(final WebContext context) {
         super(context);
     }
@@ -21,6 +26,18 @@ public class SpringSecurityProfileManager extends ProfileManager<CommonProfile> 
     public void save(final boolean saveInSession, final CommonProfile profile, final boolean multiProfile) {
         super.save(saveInSession, profile, multiProfile);
 
-        SpringSecurityHelper.populateAuthentication(retrieveAll(saveInSession));
+        final Authentication auth = SpringSecurityHelper.populateAuthentication(retrieveAll(saveInSession));
+        if (auth != null && rememberMeServices != null) {
+            final J2EContext j2EContext = (J2EContext) context;
+            rememberMeServices.loginSuccess(j2EContext.getRequest(), j2EContext.getResponse(), auth);
+        }
+    }
+
+    public RememberMeServices getRememberMeServices() {
+        return rememberMeServices;
+    }
+
+    public void setRememberMeServices(final RememberMeServices rememberMeServices) {
+        this.rememberMeServices = rememberMeServices;
     }
 }

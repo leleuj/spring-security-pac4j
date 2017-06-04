@@ -27,7 +27,7 @@ import static org.pac4j.core.util.CommonHelper.isBlank;
  * @author Jerome Leleu
  * @since 2.0.0
  */
-public class CallbackFilter implements Filter {
+public class CallbackFilter extends AbstractRememberMeServicesFilter {
 
     public final static String DEFAULT_CALLBACK_SUFFIX = "/callback";
 
@@ -47,7 +47,11 @@ public class CallbackFilter implements Filter {
 
     public CallbackFilter() {
         callbackLogic = new J2ERenewSessionCallbackLogic<>();
-        ((J2ERenewSessionCallbackLogic<J2EContext>) callbackLogic).setProfileManagerFactory(SpringSecurityProfileManager::new);
+        ((J2ERenewSessionCallbackLogic<J2EContext>) callbackLogic).setProfileManagerFactory(ctx -> {
+            final SpringSecurityProfileManager manager = new SpringSecurityProfileManager(ctx);
+            manager.setRememberMeServices(getRememberMeServices());
+            return manager;
+        });
     }
 
     public CallbackFilter(final Config config) {

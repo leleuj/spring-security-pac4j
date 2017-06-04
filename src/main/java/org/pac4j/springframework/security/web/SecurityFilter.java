@@ -21,8 +21,9 @@ import static org.pac4j.core.util.CommonHelper.assertNotNull;
  * @author Jerome Leleu
  * @since 2.0.0
  */
-public class SecurityFilter implements Filter {
+public class SecurityFilter extends AbstractRememberMeServicesFilter {
 
+    // TODO: use the SecurityLogic in v3.0?
     private DefaultSecurityLogic<Object, J2EContext> securityLogic;
 
     private Config config;
@@ -37,7 +38,11 @@ public class SecurityFilter implements Filter {
 
     public SecurityFilter() {
         securityLogic = new DefaultSecurityLogic<>();
-        ((DefaultSecurityLogic<Object, J2EContext>) securityLogic).setProfileManagerFactory(SpringSecurityProfileManager::new);
+        securityLogic.setProfileManagerFactory(ctx -> {
+            final SpringSecurityProfileManager manager = new SpringSecurityProfileManager(ctx);
+            manager.setRememberMeServices(getRememberMeServices());
+            return manager;
+        });
     }
 
     public SecurityFilter(final Config config) {

@@ -9,6 +9,7 @@ import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileHelper;
 import org.pac4j.springframework.security.authentication.Pac4jAuthenticationToken;
 import org.pac4j.springframework.security.authentication.Pac4jRememberMeAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -52,19 +53,25 @@ public final class SpringSecurityHelper {
      * Populate the authenticated user profiles in the Spring Security context.
      *
      * @param profiles the linked hashmap of profiles
+     * @return the authentication
      */
-    public static void populateAuthentication(final LinkedHashMap<String, CommonProfile> profiles) {
+    public static Authentication populateAuthentication(final LinkedHashMap<String, CommonProfile> profiles) {
+        Authentication auth = null;
         if (profiles != null && profiles.size() > 0) {
             final List<CommonProfile> listProfiles = ProfileHelper.flatIntoAProfileList(profiles);
             try {
                 if (IS_FULLY_AUTHENTICATED_AUTHORIZER.isAuthorized(null, listProfiles)) {
-                    SecurityContextHolder.getContext().setAuthentication(new Pac4jAuthenticationToken(profiles));
+                    auth = new Pac4jAuthenticationToken(profiles);
                 } else if (IS_REMEMBERED_AUTHORIZER.isAuthorized(null, listProfiles)) {
-                    SecurityContextHolder.getContext().setAuthentication(new Pac4jRememberMeAuthenticationToken(profiles));
+                    auth = new Pac4jRememberMeAuthenticationToken(profiles);
                 }
             } catch (final HttpAction e) {
                 throw new TechnicalException(e);
             }
         }
+        if (auth != null) {
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        }
+        return auth;
     }
 }
